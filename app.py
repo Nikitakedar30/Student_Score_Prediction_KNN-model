@@ -14,11 +14,9 @@ st.set_page_config(
 # 2. Custom CSS for a Clean, Modern Look
 st.markdown("""
     <style>
-    /* Main container background tweaks */
     .main {
         background-color: #f9fbfd;
     }
-    /* Title alignment and color */
     .main-title {
         font-family: 'Helvetica Neue', Arial, sans-serif;
         color: #1E3A8A;
@@ -32,7 +30,6 @@ st.markdown("""
         font-size: 1.1rem;
         margin-bottom: 30px;
     }
-    /* Section headers */
     .section-header {
         color: #2563EB;
         font-weight: 600;
@@ -41,7 +38,6 @@ st.markdown("""
         margin-top: 20px;
         margin-bottom: 15px;
     }
-    /* Custom Card for Results */
     .result-card {
         background-color: #ffffff;
         padding: 24px;
@@ -53,7 +49,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. Robust Model Loader
+# 3. Model Loader
 @st.cache_resource
 def load_model():
     base_dir = os.path.dirname(__file__)
@@ -78,10 +74,11 @@ with st.container(border=True):
     
     col1, col2 = st.columns(2)
     with col1:
-        hours_studied = st.slider(
-            "📚 Hours Studied (per week)", 
-            min_value=0.0, max_value=100.0, value=10.0, step=0.5,
-            help="Total hours the student dedicated to self-study per week."
+        # Changed tracker to represent study hours per day
+        hours_studied_per_day = st.slider(
+            "📚 Hours Studied (per day)", 
+            min_value=0.0, max_value=16.0, value=2.0, step=0.5,
+            help="Average number of hours the student dedicates to self-study each day."
         )
     with col2:
         attendance_percent = st.slider(
@@ -108,15 +105,17 @@ with st.container(border=True):
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Styled centered action button
     left_spacer, center_button, right_spacer = st.columns([1, 2, 1])
     with center_button:
         submit_btn = st.button("✨ Run Predictive Analysis", type="primary", use_container_width=True)
 
-# 6. Prediction Logic & Output Styling
+# 6. Prediction Logic & Output
 if submit_btn:
+    # Scale the daily inputs up to the weekly format the model expects
+    converted_weekly_hours = hours_studied_per_day * 7.0
+    
     input_df = pd.DataFrame([{
-        'hours_studied': hours_studied,
+        'hours_studied': converted_weekly_hours,
         'sleep_hours': sleep_hours,
         'attendance_percent': attendance_percent,
         'previous_scores': previous_scores
@@ -125,7 +124,6 @@ if submit_btn:
     try:
         prediction = model.predict(input_df)[0]
         
-        # Displaying an attractive result card
         st.markdown(f"""
             <div class='result-card'>
                 <h3 style='margin-top: 0; color: #065F46;'>🎯 Analysis Summary</h3>
@@ -135,7 +133,6 @@ if submit_btn:
             </div>
         """, unsafe_allow_html=True)
         
-        # Big clean metric overlay
         st.metric(
             label="Estimated Final Score Outcome", 
             value=f"{prediction:.2f} / 100",
