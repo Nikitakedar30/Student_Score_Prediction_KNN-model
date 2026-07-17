@@ -1,6 +1,6 @@
 import streamlit as st
 import pickle
-import numpy as np
+import pandas as pd
 
 # Set up page configurations
 st.set_page_config(
@@ -23,10 +23,10 @@ except Exception as e:
 
 # Title and description
 st.title("🎓 Student Performance Predictor")
-st.write("Enter the student metrics below to estimate their final performance score using the trained KNN model.")
+st.write("Enter the student metrics below to estimate their final performance score.")
 st.markdown("---")
 
-# Layout columns for inputs
+# Layout columns for UI grouping
 col1, col2 = st.columns(2)
 
 with col1:
@@ -71,13 +71,19 @@ st.markdown("---")
 
 # Predict action
 if st.button("Predict Score", type="primary"):
-    # Format the input features in the exact structure the model expects
-    # Order matches: hours_studied, sleep_hours, attendance_percent, previous_scores
-    input_data = np.array([[hours_studied, sleep_hours, attendance_percent, previous_scores]])
+    # CRITICAL: Constructing a DataFrame preserves the exact feature names 
+    # ('hours_studied', 'sleep_hours', 'attendance_percent', 'previous_scores')
+    # that your model was trained on, preventing mismatch warnings.
+    input_df = pd.DataFrame([{
+        'hours_studied': hours_studied,
+        'sleep_hours': sleep_hours,
+        'attendance_percent': attendance_percent,
+        'previous_scores': previous_scores
+    }])
     
     try:
         # Run prediction
-        prediction = model.predict(input_data)[0]
+        prediction = model.predict(input_df)[0]
         
         # Display Results
         st.success("### Prediction Complete!")
